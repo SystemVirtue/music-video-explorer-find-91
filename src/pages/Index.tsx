@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Artist, MusicVideo, searchArtist, getMusicVideos } from "@/services/musicApi";
 import { Button } from "@/components/ui/button";
@@ -43,20 +42,31 @@ const Index = () => {
       
       setCurrentArtist(artist);
       
-      // Step 2: Get videos from AudioDB using the MusicBrainz ID
-      const fetchedVideos = await getMusicVideos(artist.id);
-      setVideos(fetchedVideos);
-      
-      if (fetchedVideos.length === 0) {
+      try {
+        // Step 2: Get videos from AudioDB using the MusicBrainz ID
+        const fetchedVideos = await getMusicVideos(artist.id);
+        setVideos(fetchedVideos);
+        
+        if (fetchedVideos.length === 0) {
+          toast({
+            title: "No music videos found",
+            description: `We couldn't find any music videos for ${artist.name}`,
+          });
+        } else {
+          toast({
+            title: "Search successful",
+            description: `Found ${fetchedVideos.length} music videos for ${artist.name}`,
+          });
+        }
+      } catch (audioDbError) {
+        console.error("AudioDB error:", audioDbError);
+        // Still show artist, but inform about video fetch failure
         toast({
-          title: "No music videos found",
-          description: `We couldn't find any music videos for ${artist.name}`,
+          title: "Videos not available",
+          description: `Found artist "${artist.name}" but couldn't load videos. AudioDB service may be down.`,
+          variant: "destructive",
         });
-      } else {
-        toast({
-          title: "Search successful",
-          description: `Found ${fetchedVideos.length} music videos for ${artist.name}`,
-        });
+        setError("Could not retrieve music videos. The AudioDB service may be unavailable.");
       }
     } catch (error) {
       console.error("Search error:", error);

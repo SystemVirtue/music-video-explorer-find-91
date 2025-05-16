@@ -1,7 +1,6 @@
-
 // API endpoints for MusicBrainz and AudioDB
 const MUSICBRAINZ_API = 'https://musicbrainz.org/ws/2';
-const AUDIODB_API = 'https://theaudiodb.com/api/v1/json/2';
+const AUDIODB_API = 'https://www.theaudiodb.com/api/v1/json/2';
 
 // Types
 export interface Artist {
@@ -68,7 +67,17 @@ export const searchArtist = async (name: string): Promise<Artist | null> => {
  */
 export const getMusicVideos = async (mbid: string): Promise<MusicVideo[]> => {
   try {
-    const response = await fetch(`${AUDIODB_API}/mvid-mb.php?i=${mbid}`);
+    // Added explicit CORS mode, added protocol, and added headers
+    const response = await fetch(
+      `${AUDIODB_API}/mvid-mb.php?i=${mbid}`,
+      {
+        mode: 'cors',
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'MusicVideoFinder/1.0.0 (lovable.app)'
+        }
+      }
+    );
     
     if (!response.ok) {
       throw new Error(`AudioDB API error: ${response.status} ${response.statusText}`);
