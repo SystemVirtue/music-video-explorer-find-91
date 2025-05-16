@@ -36,13 +36,13 @@ export const searchArtist = async (name: string): Promise<Artist | null> => {
       {
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'MusicVideoFinder/1.0.0'
+          'User-Agent': 'MusicVideoFinder/1.0.0 (lovable.app)'
         }
       }
     );
     
     if (!response.ok) {
-      throw new Error(`MusicBrainz API error: ${response.status}`);
+      throw new Error(`MusicBrainz API error: ${response.status} ${response.statusText}`);
     }
     
     const data = await response.json();
@@ -71,7 +71,7 @@ export const getMusicVideos = async (mbid: string): Promise<MusicVideo[]> => {
     const response = await fetch(`${AUDIODB_API}/mvid-mb.php?i=${mbid}`);
     
     if (!response.ok) {
-      throw new Error(`AudioDB API error: ${response.status}`);
+      throw new Error(`AudioDB API error: ${response.status} ${response.statusText}`);
     }
     
     const data = await response.json();

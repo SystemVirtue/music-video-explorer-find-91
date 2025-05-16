@@ -29,6 +29,8 @@ const Index = () => {
 
     setIsSearching(true);
     setError(null);
+    setCurrentArtist(null);
+    setVideos([]);
     
     try {
       // Step 1: Search for the artist in MusicBrainz
@@ -36,8 +38,6 @@ const Index = () => {
       
       if (!artist) {
         setError(`No artist found with the name "${artistName}"`);
-        setCurrentArtist(null);
-        setVideos([]);
         return;
       }
       
@@ -60,10 +60,14 @@ const Index = () => {
       }
     } catch (error) {
       console.error("Search error:", error);
-      setError("An error occurred while searching. Please try again.");
+      let errorMessage = "An error occurred while searching. Please try again.";
+      if (error instanceof Error) {
+        errorMessage = `Error: ${error.message}`;
+      }
+      setError(errorMessage);
       toast({
         title: "Search failed",
-        description: "There was an error while searching for music videos",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
