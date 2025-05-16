@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Artist, MusicVideo, searchArtist, getMusicVideos } from "@/services/musicApi";
 import { Button } from "@/components/ui/button";
@@ -32,14 +33,22 @@ const Index = () => {
     setVideos([]);
     
     try {
+      console.log(`Searching for artist: "${artistName}"`);
       // Step 1: Search for the artist in MusicBrainz
       const artist = await searchArtist(artistName);
       
       if (!artist) {
         setError(`No artist found with the name "${artistName}"`);
+        toast({
+          title: "Artist not found",
+          description: `We couldn't find any artist with the name "${artistName}"`,
+          variant: "destructive",
+        });
+        setIsSearching(false);
         return;
       }
       
+      console.log(`Artist found: ${artist.name} (ID: ${artist.id})`);
       setCurrentArtist(artist);
       
       try {
@@ -48,11 +57,13 @@ const Index = () => {
         setVideos(fetchedVideos);
         
         if (fetchedVideos.length === 0) {
+          console.log(`No videos found for artist: ${artist.name}`);
           toast({
             title: "No music videos found",
             description: `We couldn't find any music videos for ${artist.name}`,
           });
         } else {
+          console.log(`Found ${fetchedVideos.length} videos for artist: ${artist.name}`);
           toast({
             title: "Search successful",
             description: `Found ${fetchedVideos.length} music videos for ${artist.name}`,
