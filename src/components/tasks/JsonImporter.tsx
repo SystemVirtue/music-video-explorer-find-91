@@ -2,16 +2,17 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { FileJson } from "lucide-react";
+import { FileJson, Home } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { importFromJson } from "@/services/fileManager";
 
 interface JsonImporterProps {
   onImport: () => void;
   onCancel: () => void;
+  onGoHome?: () => void;
 }
 
-const JsonImporter = ({ onImport, onCancel }: JsonImporterProps) => {
+const JsonImporter = ({ onImport, onCancel, onGoHome }: JsonImporterProps) => {
   const [isImporting, setIsImporting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -68,7 +69,19 @@ const JsonImporter = ({ onImport, onCancel }: JsonImporterProps) => {
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Import JSON Data</h2>
-        <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+        <div className="flex gap-2">
+          {onGoHome && (
+            <Button 
+              variant="outline" 
+              onClick={onGoHome} 
+              className="flex items-center gap-1"
+            >
+              <Home className="h-4 w-4" />
+              Home
+            </Button>
+          )}
+          <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+        </div>
       </div>
       
       <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center space-y-4">

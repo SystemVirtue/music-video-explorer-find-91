@@ -4,15 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { extractArtistsFromPlaylist } from "@/services/fileManager";
 import { useToast } from "@/components/ui/use-toast";
-import { List } from "lucide-react";
+import { List, Home } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface PlaylistExtractorProps {
   onExtract: (artists: string[]) => void;
   onCancel: () => void;
+  onGoHome?: () => void;
 }
 
-const PlaylistExtractor = ({ onExtract, onCancel }: PlaylistExtractorProps) => {
+const PlaylistExtractor = ({ onExtract, onCancel, onGoHome }: PlaylistExtractorProps) => {
   const [playlistUrl, setPlaylistUrl] = useState("");
   const [isExtracting, setIsExtracting] = useState(false);
   const { toast } = useToast();
@@ -62,7 +63,19 @@ const PlaylistExtractor = ({ onExtract, onCancel }: PlaylistExtractorProps) => {
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Extract Artists from Playlist</h2>
-        <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+        <div className="flex gap-2">
+          {onGoHome && (
+            <Button 
+              variant="outline" 
+              onClick={onGoHome} 
+              className="flex items-center gap-1"
+            >
+              <Home className="h-4 w-4" />
+              Home
+            </Button>
+          )}
+          <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+        </div>
       </div>
       
       <form onSubmit={handleExtract} className="space-y-4">
