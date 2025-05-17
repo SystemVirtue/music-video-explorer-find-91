@@ -2,13 +2,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { MusicVideo, extractYoutubeId } from "@/services/musicApi";
+import { extractYoutubeId } from "@/services/musicApi";
 import { Home, Download, FolderOpen, Check, X } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from "@/components/ui/alert-dialog";
+import { VideoDataEntry } from "@/services/fileManager";
 
 interface ThumbnailDownloaderProps {
-  videos: MusicVideo[];
+  videos: VideoDataEntry[];
   onCancel: () => void;
   onGoHome?: () => void;
 }
@@ -44,9 +45,9 @@ const ThumbnailDownloader = ({ videos, onCancel, onGoHome }: ThumbnailDownloader
       setCurrentIndex(i);
       
       const video = videos[i];
-      const youtubeId = extractYoutubeId(video.strMusicVid);
+      const thumbnailYTID = video.thumbnailYTID;
       
-      if (youtubeId) {
+      if (thumbnailYTID && thumbnailYTID.match(/^[a-zA-Z0-9_-]{11}$/)) {
         // In a real application, we would check if the file exists
         // and then download it if it doesn't
         

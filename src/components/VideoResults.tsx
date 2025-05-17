@@ -1,8 +1,9 @@
 
-import { Artist, MusicVideo, generateJsonDownload } from "@/services/musicApi";
+import { Artist, MusicVideo } from "@/services/musicApi";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { generateVideoDataJsonDownload, generateArtistDataJsonDownload, generateCombinedDataJsonDownload } from "@/services/fileManager";
 
 interface VideoResultsProps {
   artist: Artist;
@@ -12,12 +13,12 @@ interface VideoResultsProps {
 const VideoResults = ({ artist, videos }: VideoResultsProps) => {
   const { toast } = useToast();
   
-  const handleDownload = () => {
+  const handleCombinedDownload = () => {
     try {
-      const jsonUrl = generateJsonDownload(artist, videos);
+      const jsonUrl = generateCombinedDataJsonDownload();
       const link = document.createElement('a');
       link.href = jsonUrl;
-      link.download = `${artist.name.replace(/\s+/g, '_')}_music_videos.json`;
+      link.download = `${artist.name.replace(/\s+/g, '_')}_combined_data.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -39,6 +40,60 @@ const VideoResults = ({ artist, videos }: VideoResultsProps) => {
     }
   };
 
+  const handleDownloadArtistData = () => {
+    try {
+      const jsonUrl = generateArtistDataJsonDownload();
+      const link = document.createElement('a');
+      link.href = jsonUrl;
+      link.download = `ARTIST_DATA.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the object URL
+      setTimeout(() => URL.revokeObjectURL(jsonUrl), 100);
+      
+      toast({
+        title: "Artist data download started",
+        description: "Your ARTIST_DATA.json file is being downloaded",
+      });
+    } catch (error) {
+      console.error("Download error:", error);
+      toast({
+        title: "Download failed",
+        description: "There was an error generating your download",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadVideoData = () => {
+    try {
+      const jsonUrl = generateVideoDataJsonDownload();
+      const link = document.createElement('a');
+      link.href = jsonUrl;
+      link.download = `VIDEO_DATA.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the object URL
+      setTimeout(() => URL.revokeObjectURL(jsonUrl), 100);
+      
+      toast({
+        title: "Video data download started",
+        description: "Your VIDEO_DATA.json file is being downloaded",
+      });
+    } catch (error) {
+      console.error("Download error:", error);
+      toast({
+        title: "Download failed",
+        description: "There was an error generating your download",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -49,13 +104,30 @@ const VideoResults = ({ artist, videos }: VideoResultsProps) => {
           </p>
         </div>
         
-        <Button 
-          onClick={handleDownload} 
-          className="bg-music hover:bg-music-hover"
-        >
-          <Download className="mr-2 h-4 w-4" />
-          Download JSON
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            onClick={handleDownloadArtistData} 
+            className="bg-music hover:bg-music-hover"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            ARTIST_DATA.json
+          </Button>
+          <Button 
+            onClick={handleDownloadVideoData} 
+            className="bg-music hover:bg-music-hover"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            VIDEO_DATA.json
+          </Button>
+          <Button 
+            onClick={handleCombinedDownload} 
+            className="bg-music hover:bg-music-hover"
+            variant="outline"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Combined JSON
+          </Button>
+        </div>
       </div>
       
       {videos.length > 0 ? (

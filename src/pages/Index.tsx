@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Artist, MusicVideo, searchArtist, getMusicVideos } from "@/services/musicApi";
 import { Button } from "@/components/ui/button";
@@ -18,8 +19,11 @@ import {
   getVideoData, 
   initializeVideoData, 
   addSearchResultsToVideoData, 
+  generateCombinedDataJsonDownload,
+  getCollectionStats,
+  ArtistDataFile,
   VideoDataFile,
-  generateVideoDataJsonDownload 
+  deleteArtists
 } from "@/services/fileManager";
 
 const Index = () => {
@@ -28,7 +32,8 @@ const Index = () => {
   const [currentArtist, setCurrentArtist] = useState<Artist | null>(null);
   const [videos, setVideos] = useState<MusicVideo[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [videoData, setVideoData] = useState<VideoDataFile>(initializeVideoData());
+  const [artistData, setArtistData] = useState<ArtistDataFile>({ artists: [] });
+  const [videoData, setVideoData] = useState<VideoDataFile>({ videos: [] });
   const [selectedTask, setSelectedTask] = useState<Task>(null);
   const [processingQueue, setProcessingQueue] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -38,7 +43,8 @@ const Index = () => {
   // Initialize video data on component mount
   useEffect(() => {
     const data = getVideoData();
-    setVideoData(data);
+    setArtistData(data.artistData);
+    setVideoData(data.videoData);
   }, []);
 
   // Process queue of artist names
@@ -97,7 +103,8 @@ const Index = () => {
         
         // Step 3: Add to video data file
         const updatedData = addSearchResultsToVideoData(artist, fetchedVideos);
-        setVideoData(updatedData);
+        setArtistData(updatedData.artistData);
+        setVideoData(updatedData.videoData);
         
         toast({
           title: "Search successful",
@@ -112,7 +119,8 @@ const Index = () => {
         
         // Still add artist to data, but with empty videos
         const updatedData = addSearchResultsToVideoData(artist, []);
-        setVideoData(updatedData);
+        setArtistData(updatedData.artistData);
+        setVideoData(updatedData.videoData);
         
         toast({
           title: "Videos not available",
@@ -177,7 +185,8 @@ const Index = () => {
   const handleImportComplete = () => {
     // Refresh video data
     const updatedData = getVideoData();
-    setVideoData(updatedData);
+    setArtistData(updatedData.artistData);
+    setVideoData(updatedData.videoData);
     setSelectedTask(null);
     
     toast({
@@ -188,8 +197,9 @@ const Index = () => {
   
   const handleExportCollection = () => {
     try {
-      const jsonUrl = generateVideoDataJsonDownload();
-      const fileName = `Video_Collection_${videoData.artistCount}_Artists_${videoData.videoCount}_Videos.json`;
+      const jsonUrl = generateCombinedDataJsonDownload();
+      const { artistCount, videoCount } = getCollectionStats();
+      const fileName = `Video_Collection_${artistCount}_Artists_${videoCount}_Videos.json`;
       const link = document.createElement('a');
       link.href = jsonUrl;
       link.download = fileName;
@@ -217,8 +227,11 @@ const Index = () => {
   const handleReset = () => {
     // Reset the collection to empty
     const emptyData = initializeVideoData();
-    setVideoData(emptyData);
-    localStorage.setItem('Video_Data_JSON', JSON.stringify(emptyData));
+    setArtistData(emptyData.artistData);
+    setVideoData(emptyData.videoData);
+    localStorage.removeItem('ARTIST_DATA_JSON');
+    localStorage.removeItem('VIDEO_DATA_JSON');
+    localStorage.removeItem('Video_Data_JSON');
     
     // Reset UI state
     setSelectedTask(null);
@@ -237,28 +250,13 @@ const Index = () => {
     setTimeout(() => handleReset(), 500); // Small delay to ensure export completes
   };
   
-  const handleDeleteArtists = (artistIds: string[]) => {
+  const handleDeleteArtists = (artistADIDs: string[]) => {
     // Remove selected artists and their videos from the collection
-    const updatedData = { ...videoData };
+    const updatedData = deleteArtists(artistADIDs);
     
-    // Filter out the artists to remove
-    updatedData.artists = updatedData.artists.filter(
-      artist => !artistIds.includes(artist.id)
-    );
-    
-    // Filter out videos belonging to those artists
-    updatedData.videos = updatedData.videos.filter(
-      video => !artistIds.includes(video.idArtist)
-    );
-    
-    // Update counts
-    updatedData.artistCount = updatedData.artists.length;
-    updatedData.videoCount = updatedData.videos.length;
-    updatedData.lastUpdated = new Date().toISOString();
-    
-    // Update state and save to localStorage
-    setVideoData(updatedData);
-    localStorage.setItem('Video_Data_JSON', JSON.stringify(updatedData));
+    // Update state with new data
+    setArtistData(updatedData.artistData);
+    setVideoData(updatedData.videoData);
     
     // Close the task
     setSelectedTask(null);
@@ -267,7 +265,8 @@ const Index = () => {
   const handleGoHome = () => {
     // Update the data to ensure counts are current
     const updatedData = getVideoData();
-    setVideoData(updatedData);
+    setArtistData(updatedData.artistData);
+    setVideoData(updatedData.videoData);
     
     // Reset the UI state
     setSelectedTask(null);
@@ -365,7 +364,7 @@ const Index = () => {
       case 'view-edit':
         return (
           <ViewEditCollection
-            artists={videoData.artists}
+            artists={artistData.artists}
             videos={videoData.videos}
             onDeleteArtists={handleDeleteArtists}
             onCancel={() => setSelectedTask(null)}
@@ -401,7 +400,8 @@ const Index = () => {
         {/* Task selector or currently selected task */}
         {selectedTask === null ? (
           <TaskSelector 
-            videoData={videoData} 
+            artistData={artistData}
+            videoData={videoData}
             onTaskSelect={setSelectedTask}
             onGoHome={handleGoHome}
             onExportCollection={handleExportCollection}

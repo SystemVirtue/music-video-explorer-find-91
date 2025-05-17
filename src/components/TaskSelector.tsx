@@ -2,19 +2,20 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, List, FileJson, Upload, Home, Download, RefreshCcw, Edit, File } from "lucide-react";
-import { VideoDataFile } from "@/services/fileManager";
+import { ArtistDataFile, VideoDataFile, getCollectionStats } from "@/services/fileManager";
 
 export type Task = 'search' | 'playlist' | 'json' | 'txt' | 'thumbnails' | 'reset' | 'view-edit' | 'ai-generate' | null;
 
 interface TaskSelectorProps {
+  artistData: ArtistDataFile;
   videoData: VideoDataFile;
   onTaskSelect: (task: Task) => void;
   onGoHome?: () => void;
   onExportCollection: () => void;
 }
 
-const TaskSelector = ({ videoData, onTaskSelect, onGoHome, onExportCollection }: TaskSelectorProps) => {
-  const { artistCount, videoCount } = videoData;
+const TaskSelector = ({ artistData, videoData, onTaskSelect, onGoHome, onExportCollection }: TaskSelectorProps) => {
+  const { artistCount, videoCount } = getCollectionStats();
   
   const hasData = artistCount > 0 || videoCount > 0;
   

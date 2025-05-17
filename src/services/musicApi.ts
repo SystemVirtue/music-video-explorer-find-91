@@ -21,6 +21,7 @@ export interface MusicVideo {
   strTrackThumb: string | null;
   strMusicVid: string;
   strDescriptionEN: string | null;
+  strMusicBrainzArtistID?: string; // Add this to support the new data format
 }
 
 export interface SearchResults {
@@ -165,7 +166,8 @@ export const generateJsonDownload = (artist: Artist, videos: MusicVideo[]): stri
       strArtist: video.strArtist,
       strTrackThumb: video.strTrackThumb,
       strMusicVid: video.strMusicVid,
-      strDescriptionEN: video.strDescriptionEN
+      strDescriptionEN: video.strDescriptionEN,
+      strMusicBrainzArtistID: artist.id // Include the MusicBrainz ID for better data
     })),
     timestamp: new Date().toISOString()
   };

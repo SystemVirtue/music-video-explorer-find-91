@@ -4,45 +4,71 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { Home, Edit, Trash, Check } from "lucide-react";
-import { Artist, MusicVideo } from "@/services/musicApi";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from "@/components/ui/alert-dialog";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { ArtistDataEntry, VideoDataEntry } from "@/services/fileManager";
 
 interface ViewEditCollectionProps {
-  artists: Artist[];
-  videos: MusicVideo[];
-  onDeleteArtists: (artistIds: string[]) => void;
+  artists: ArtistDataEntry[];
+  videos: VideoDataEntry[];
+  onDeleteArtists: (artistADIDs: string[]) => void;
   onCancel: () => void;
   onGoHome?: () => void;
 }
 
-interface ArtistWithVideoCount extends Artist {
-  videoCount: number;
+interface ArtistWithSelection extends ArtistDataEntry {
   selected: boolean;
+  name?: string; // Optional name field in case we have it
 }
 
 const ViewEditCollection = ({ artists, videos, onDeleteArtists, onCancel, onGoHome }: ViewEditCollectionProps) => {
-  const [artistList, setArtistList] = useState<ArtistWithVideoCount[]>([]);
+  const [artistList, setArtistList] = useState<ArtistWithSelection[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { toast } = useToast();
   
   // Initialize artist list with video counts
   useEffect(() => {
-    const artistsWithCounts = artists.map(artist => {
-      const count = videos.filter(video => video.idArtist === artist.id).length;
+    // Group videos by artistADID to get artist names
+    const artistNamesMap = new Map<string, string>();
+    videos.forEach(video => {
+      if (!artistNamesMap.has(video.artistADID)) {
+        // Extract artist name from song title or use placeholder
+        const artistName = getArtistNameFromVideo(video);
+        artistNamesMap.set(video.artistADID, artistName);
+      }
+    });
+    
+    const artistsWithSelections = artists.map(artist => {
+      // Count videos for this artist
+      const count = videos.filter(video => video.artistADID === artist.artistADID).length;
+      
       return {
         ...artist,
         videoCount: count,
-        selected: false
+        selected: false,
+        name: artistNamesMap.get(artist.artistADID) || `Artist (ID: ${artist.artistADID.substring(0, 8)}...)`
       };
     });
-    setArtistList(artistsWithCounts);
+    
+    setArtistList(artistsWithSelections);
   }, [artists, videos]);
+  
+  // Helper function to attempt to extract artist name from video data
+  const getArtistNameFromVideo = (video: VideoDataEntry): string => {
+    // Try to extract from song title if it follows "Artist - Song Title" format
+    const titleParts = video.songTitle.split(' - ');
+    if (titleParts.length > 1) {
+      return titleParts[0].trim();
+    }
+    
+    // Use part of the artistADID as fallback
+    return `Artist (ID: ${video.artistADID.substring(0, 8)}...)`;
+  };
   
   // Filter artists based on search term
   const filteredArtists = artistList.filter(artist => 
-    artist.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (artist.name && artist.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    artist.artistADID.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
   const selectedCount = artistList.filter(artist => artist.selected).length;
@@ -51,7 +77,7 @@ const ViewEditCollection = ({ artists, videos, onDeleteArtists, onCancel, onGoHo
   const toggleSelect = (id: string) => {
     setArtistList(prev => 
       prev.map(artist => 
-        artist.id === id ? { ...artist, selected: !artist.selected } : artist
+        artist.artistADID === id ? { ...artist, selected: !artist.selected } : artist
       )
     );
   };
@@ -61,7 +87,7 @@ const ViewEditCollection = ({ artists, videos, onDeleteArtists, onCancel, onGoHo
     const allSelected = filteredArtists.every(artist => artist.selected);
     setArtistList(prev => 
       prev.map(artist => {
-        if (filteredArtists.some(a => a.id === artist.id)) {
+        if (filteredArtists.some(a => a.artistADID === artist.artistADID)) {
           return { ...artist, selected: !allSelected };
         }
         return artist;
@@ -71,16 +97,16 @@ const ViewEditCollection = ({ artists, videos, onDeleteArtists, onCancel, onGoHo
   
   // Handle deletion of selected artists
   const handleDelete = () => {
-    const selectedIds = artistList
+    const selectedADIDs = artistList
       .filter(artist => artist.selected)
-      .map(artist => artist.id);
+      .map(artist => artist.artistADID);
     
-    onDeleteArtists(selectedIds);
+    onDeleteArtists(selectedADIDs);
     setConfirmDelete(false);
     
     toast({
       title: "Artists Deleted",
-      description: `${selectedIds.length} artists have been removed from the collection.`
+      description: `${selectedADIDs.length} artists have been removed from the collection.`
     });
   };
 
@@ -136,7 +162,7 @@ const ViewEditCollection = ({ artists, videos, onDeleteArtists, onCancel, onGoHo
             <div className="space-y-2">
               {filteredArtists.map((artist) => (
                 <div 
-                  key={artist.id} 
+                  key={artist.artistADID} 
                   className={`flex items-center p-2 rounded hover:bg-muted ${
                     artist.selected ? 'bg-muted' : ''
                   }`}
@@ -144,11 +170,11 @@ const ViewEditCollection = ({ artists, videos, onDeleteArtists, onCancel, onGoHo
                   <input
                     type="checkbox"
                     checked={artist.selected}
-                    onChange={() => toggleSelect(artist.id)}
+                    onChange={() => toggleSelect(artist.artistADID)}
                     className="mr-3 h-4 w-4"
                   />
                   <span className="flex-grow">{artist.name}</span>
-                  <span className="text-muted-foreground">({artist.videoCount})</span>
+                  <span className="text-muted-foreground">({artist.artistVideoCount})</span>
                 </div>
               ))}
             </div>
