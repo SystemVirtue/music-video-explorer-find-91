@@ -7,6 +7,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { List, Home } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
+// YouTube API Key (for demo purposes only - in a production app, this would be handled securely)
+const YOUTUBE_API_KEY = "AIzaSyC12QKbzGaKZw9VD3-ulxU_mrd0htZBiI4";
+
 interface PlaylistExtractorProps {
   onExtract: (artists: string[]) => void;
   onCancel: () => void;
@@ -32,6 +35,15 @@ const PlaylistExtractor = ({ onExtract, onCancel, onGoHome }: PlaylistExtractorP
     setIsExtracting(true);
     
     try {
+      // Extract playlist ID from URL if needed
+      const playlistId = extractPlaylistId(playlistUrl);
+      
+      if (!playlistId) {
+        throw new Error("Invalid YouTube playlist URL or ID");
+      }
+      
+      // In a real implementation, we would use the YouTube API here
+      // For now, we'll use the mock extraction function
       const artistNames = await extractArtistsFromPlaylist(playlistUrl);
       
       if (artistNames.length === 0) {
@@ -57,6 +69,19 @@ const PlaylistExtractor = ({ onExtract, onCancel, onGoHome }: PlaylistExtractorP
     } finally {
       setIsExtracting(false);
     }
+  };
+  
+  // Helper function to extract playlist ID from various YouTube URL formats
+  const extractPlaylistId = (url: string): string | null => {
+    // Direct playlist ID
+    if (url.match(/^PL[a-zA-Z0-9_-]{16,}$/)) {
+      return url;
+    }
+    
+    // URL formats
+    const regex = /(?:list=)([a-zA-Z0-9_-]+)/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
   };
 
   return (
@@ -115,7 +140,7 @@ const PlaylistExtractor = ({ onExtract, onCancel, onGoHome }: PlaylistExtractorP
       
       <div className="p-4 bg-muted/30 rounded-lg">
         <p className="text-sm text-muted-foreground">
-          <strong>Note:</strong> This functionality currently demonstrates the UI flow but requires YouTube API integration for actual data extraction.
+          <strong>Note:</strong> This functionality currently demonstrates the UI flow but requires the YouTube API to actually extract data from playlists.
         </p>
       </div>
     </div>
