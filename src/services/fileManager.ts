@@ -1,5 +1,4 @@
-
-import { Artist, MusicVideo, SearchResults } from "./musicApi";
+import { Artist, MusicVideo, SearchResults, getYouTubePlaylistItems, extractArtistsFromTitles } from "./musicApi";
 
 export interface VideoDataFile {
   artists: Artist[];
@@ -181,10 +180,20 @@ export const extractArtistsFromPlaylist = async (playlistUrl: string): Promise<s
       }
     }
     
-    // This is a simplified approach - in a real app we would need to use YouTube API
-    // For now, we'll just return a message that this functionality would require YouTube API integration
+    // Get playlist items from YouTube API
+    const playlistItems = await getYouTubePlaylistItems(playlistId);
     
-    return [`YouTube API integration required to extract artists from playlist: ${playlistId}`];
+    if (!playlistItems || playlistItems.length === 0) {
+      return [];
+    }
+    
+    // Extract video titles from playlist items
+    const videoTitles = playlistItems.map(item => 
+      item.snippet && item.snippet.title ? item.snippet.title : ""
+    ).filter(title => title !== "");
+    
+    // Extract artist names from video titles
+    return extractArtistsFromTitles(videoTitles);
   } catch (error) {
     console.error('Error parsing YouTube playlist:', error);
     throw new Error('Failed to parse YouTube playlist URL/ID');

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { extractArtistsFromPlaylist } from "@/services/fileManager";
+import { getYouTubePlaylistItems, extractArtistsFromTitles } from "@/services/musicApi";
 import { useToast } from "@/components/ui/use-toast";
 import { List, Home } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -42,9 +42,25 @@ const PlaylistExtractor = ({ onExtract, onCancel, onGoHome }: PlaylistExtractorP
         throw new Error("Invalid YouTube playlist URL or ID");
       }
       
-      // In a real implementation, we would use the YouTube API here
-      // For now, we'll use the mock extraction function
-      const artistNames = await extractArtistsFromPlaylist(playlistUrl);
+      toast({
+        title: "Processing playlist",
+        description: `Extracting artists from playlist ${playlistId}`,
+      });
+      
+      // Get playlist items from YouTube API
+      const playlistItems = await getYouTubePlaylistItems(playlistId);
+      
+      if (!playlistItems || playlistItems.length === 0) {
+        throw new Error("No videos found in playlist or playlist is private");
+      }
+      
+      // Extract video titles from playlist items
+      const videoTitles = playlistItems.map(item => 
+        item.snippet && item.snippet.title ? item.snippet.title : ""
+      ).filter(title => title !== "");
+      
+      // Extract artist names from video titles
+      const artistNames = extractArtistsFromTitles(videoTitles);
       
       if (artistNames.length === 0) {
         toast({
@@ -55,7 +71,7 @@ const PlaylistExtractor = ({ onExtract, onCancel, onGoHome }: PlaylistExtractorP
       } else {
         toast({
           title: "Artists extracted",
-          description: `Extracted ${artistNames.length} artists from playlist`,
+          description: `Extracted ${artistNames.length} artists from playlist with ${playlistItems.length} videos`,
         });
         onExtract(artistNames);
       }
@@ -140,7 +156,8 @@ const PlaylistExtractor = ({ onExtract, onCancel, onGoHome }: PlaylistExtractorP
       
       <div className="p-4 bg-muted/30 rounded-lg">
         <p className="text-sm text-muted-foreground">
-          <strong>Note:</strong> This functionality currently demonstrates the UI flow but requires the YouTube API to actually extract data from playlists.
+          <strong>Note:</strong> This tool extracts artist names from YouTube music playlists 
+          using the video titles. For best results, use playlists with titles in the format "Artist - Song Title".
         </p>
       </div>
     </div>
