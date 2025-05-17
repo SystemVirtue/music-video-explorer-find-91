@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Artist, MusicVideo, searchArtist, getMusicVideos } from "@/services/musicApi";
 import { Button } from "@/components/ui/button";
@@ -6,11 +5,15 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import VideoResults from "@/components/VideoResults";
-import { Search, Download, Home } from "lucide-react";
+import { Search, Home } from "lucide-react";
 import TaskSelector, { Task } from "@/components/TaskSelector";
 import PlaylistExtractor from "@/components/tasks/PlaylistExtractor";
 import JsonImporter from "@/components/tasks/JsonImporter";
 import TextFileUploader from "@/components/tasks/TextFileUploader";
+import ThumbnailDownloader from "@/components/tasks/ThumbnailDownloader";
+import ResetCollection from "@/components/tasks/ResetCollection";
+import ViewEditCollection from "@/components/tasks/ViewEditCollection";
+import AiArtistGenerator from "@/components/tasks/AiArtistGenerator";
 import { 
   getVideoData, 
   initializeVideoData, 
@@ -183,10 +186,10 @@ const Index = () => {
     });
   };
   
-  const handleDownload = () => {
+  const handleExportCollection = () => {
     try {
       const jsonUrl = generateVideoDataJsonDownload();
-      const fileName = `Music_Database_${videoData.artistCount}_Artists_${videoData.videoCount}_Videos.json`;
+      const fileName = `Video_Collection_${videoData.artistCount}_Artists_${videoData.videoCount}_Videos.json`;
       const link = document.createElement('a');
       link.href = jsonUrl;
       link.download = fileName;
@@ -198,17 +201,67 @@ const Index = () => {
       setTimeout(() => URL.revokeObjectURL(jsonUrl), 100);
       
       toast({
-        title: "Download started",
-        description: `Your file "${fileName}" is being downloaded`,
+        title: "Export Complete",
+        description: `Your file "${fileName}" has been exported`,
       });
     } catch (error) {
-      console.error("Download error:", error);
+      console.error("Export error:", error);
       toast({
-        title: "Download failed",
-        description: "There was an error generating your download",
+        title: "Export failed",
+        description: "There was an error generating your export file",
         variant: "destructive",
       });
     }
+  };
+
+  const handleReset = () => {
+    // Reset the collection to empty
+    const emptyData = initializeVideoData();
+    setVideoData(emptyData);
+    localStorage.setItem('Video_Data_JSON', JSON.stringify(emptyData));
+    
+    // Reset UI state
+    setSelectedTask(null);
+    setCurrentArtist(null);
+    setVideos([]);
+    setError(null);
+    
+    toast({
+      title: "Collection Reset",
+      description: "All data has been cleared from the collection",
+    });
+  };
+  
+  const handleExportAndReset = () => {
+    handleExportCollection();
+    setTimeout(() => handleReset(), 500); // Small delay to ensure export completes
+  };
+  
+  const handleDeleteArtists = (artistIds: string[]) => {
+    // Remove selected artists and their videos from the collection
+    const updatedData = { ...videoData };
+    
+    // Filter out the artists to remove
+    updatedData.artists = updatedData.artists.filter(
+      artist => !artistIds.includes(artist.id)
+    );
+    
+    // Filter out videos belonging to those artists
+    updatedData.videos = updatedData.videos.filter(
+      video => !artistIds.includes(video.idArtist)
+    );
+    
+    // Update counts
+    updatedData.artistCount = updatedData.artists.length;
+    updatedData.videoCount = updatedData.videos.length;
+    updatedData.lastUpdated = new Date().toISOString();
+    
+    // Update state and save to localStorage
+    setVideoData(updatedData);
+    localStorage.setItem('Video_Data_JSON', JSON.stringify(updatedData));
+    
+    // Close the task
+    setSelectedTask(null);
   };
 
   const handleGoHome = () => {
@@ -219,11 +272,6 @@ const Index = () => {
     // Reset the UI state
     setSelectedTask(null);
     setError(null);
-    
-    toast({
-      title: "Home",
-      description: `Data updated: ${updatedData.artistCount} artists and ${updatedData.videoCount} videos`,
-    });
   };
 
   const renderTaskComponent = () => {
@@ -297,6 +345,41 @@ const Index = () => {
             onGoHome={handleGoHome} 
           />
         );
+      case 'thumbnails':
+        return (
+          <ThumbnailDownloader
+            videos={videoData.videos}
+            onCancel={() => setSelectedTask(null)}
+            onGoHome={handleGoHome}
+          />
+        );
+      case 'reset':
+        return (
+          <ResetCollection
+            onReset={handleReset}
+            onExportAndReset={handleExportAndReset}
+            onCancel={() => setSelectedTask(null)}
+            onGoHome={handleGoHome}
+          />
+        );
+      case 'view-edit':
+        return (
+          <ViewEditCollection
+            artists={videoData.artists}
+            videos={videoData.videos}
+            onDeleteArtists={handleDeleteArtists}
+            onCancel={() => setSelectedTask(null)}
+            onGoHome={handleGoHome}
+          />
+        );
+      case 'ai-generate':
+        return (
+          <AiArtistGenerator
+            onAddArtists={handleExtractArtists}
+            onCancel={() => setSelectedTask(null)}
+            onGoHome={handleGoHome}
+          />
+        );
       default:
         return null;
     }
@@ -320,7 +403,8 @@ const Index = () => {
           <TaskSelector 
             videoData={videoData} 
             onTaskSelect={setSelectedTask}
-            onGoHome={handleGoHome} 
+            onGoHome={handleGoHome}
+            onExportCollection={handleExportCollection}
           />
         ) : (
           renderTaskComponent()
@@ -360,19 +444,6 @@ const Index = () => {
                 Return to Home
               </Button>
             </div>
-          </div>
-        )}
-        
-        {/* Download JSON button */}
-        {videoData.artistCount > 0 && !selectedTask && (
-          <div className="flex justify-center mt-8">
-            <Button 
-              onClick={handleDownload} 
-              className="bg-music hover:bg-music-hover"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Download All Data ({videoData.artistCount} artists, {videoData.videoCount} videos)
-            </Button>
           </div>
         )}
         

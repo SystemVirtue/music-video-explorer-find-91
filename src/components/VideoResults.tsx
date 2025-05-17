@@ -1,7 +1,6 @@
 
 import { Artist, MusicVideo, generateJsonDownload } from "@/services/musicApi";
 import { Button } from "@/components/ui/button";
-import VideoCard from "./VideoCard";
 import { Download } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -60,9 +59,24 @@ const VideoResults = ({ artist, videos }: VideoResultsProps) => {
       </div>
       
       {videos.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="space-y-2">
           {videos.map((video) => (
-            <VideoCard key={video.idTrack} video={video} />
+            <div key={video.idTrack} className="border p-4 rounded-lg">
+              <h3 className="font-semibold text-lg">{video.strTrack}</h3>
+              <p className="text-muted-foreground">{video.strArtist}</p>
+              {video.strMusicVid && (
+                <div className="mt-2">
+                  <a 
+                    href={video.strMusicVid} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-music hover:underline text-sm"
+                  >
+                    Watch on YouTube
+                  </a>
+                </div>
+              )}
+            </div>
           ))}
         </div>
       ) : (

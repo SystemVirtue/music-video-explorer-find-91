@@ -1,3 +1,4 @@
+
 import { Artist, MusicVideo, SearchResults, getYouTubePlaylistItems, extractArtistsFromTitles } from "./musicApi";
 
 export interface VideoDataFile {
@@ -30,7 +31,11 @@ export const getVideoData = (): VideoDataFile => {
       return initializeVideoData();
     }
   }
-  return initializeVideoData();
+  
+  // If data doesn't exist yet, initialize it
+  const newData = initializeVideoData();
+  localStorage.setItem('Video_Data_JSON', JSON.stringify(newData));
+  return newData;
 };
 
 // Save video data to localStorage
