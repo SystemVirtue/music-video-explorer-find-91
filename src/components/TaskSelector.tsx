@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Search, List, FileJson, Upload } from "lucide-react";
+import { Search, List, FileJson, Upload, Home } from "lucide-react";
 import { VideoDataFile } from "@/services/fileManager";
 
 export type Task = 'search' | 'playlist' | 'json' | 'txt' | null;
@@ -9,9 +9,10 @@ export type Task = 'search' | 'playlist' | 'json' | 'txt' | null;
 interface TaskSelectorProps {
   videoData: VideoDataFile;
   onTaskSelect: (task: Task) => void;
+  onGoHome?: () => void;
 }
 
-const TaskSelector = ({ videoData, onTaskSelect }: TaskSelectorProps) => {
+const TaskSelector = ({ videoData, onTaskSelect, onGoHome }: TaskSelectorProps) => {
   const { artistCount, videoCount } = videoData;
   
   const hasData = artistCount > 0 || videoCount > 0;
@@ -19,7 +20,20 @@ const TaskSelector = ({ videoData, onTaskSelect }: TaskSelectorProps) => {
   return (
     <div className="space-y-8">
       <div className="text-center space-y-6">
-        <h2 className="text-2xl font-bold">Select a Task</h2>
+        <div className="flex items-center justify-center gap-4">
+          <h2 className="text-2xl font-bold">Select a Task</h2>
+          {onGoHome && (
+            <Button 
+              onClick={onGoHome} 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-1"
+            >
+              <Home className="h-4 w-4" />
+              Home
+            </Button>
+          )}
+        </div>
         
         {hasData && (
           <div className="p-4 bg-muted/30 rounded-lg max-w-md mx-auto">

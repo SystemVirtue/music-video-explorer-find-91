@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import VideoResults from "@/components/VideoResults";
-import { Search, Download } from "lucide-react";
+import { Search, Download, Home } from "lucide-react";
 import TaskSelector, { Task } from "@/components/TaskSelector";
 import PlaylistExtractor from "@/components/tasks/PlaylistExtractor";
 import JsonImporter from "@/components/tasks/JsonImporter";
@@ -186,9 +186,10 @@ const Index = () => {
   const handleDownload = () => {
     try {
       const jsonUrl = generateVideoDataJsonDownload();
+      const fileName = `Music_Database_${videoData.artistCount}_Artists_${videoData.videoCount}_Videos.json`;
       const link = document.createElement('a');
       link.href = jsonUrl;
-      link.download = `music_videos_collection.json`;
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -198,7 +199,7 @@ const Index = () => {
       
       toast({
         title: "Download started",
-        description: "Your JSON file is being downloaded",
+        description: `Your file "${fileName}" is being downloaded`,
       });
     } catch (error) {
       console.error("Download error:", error);
@@ -210,6 +211,21 @@ const Index = () => {
     }
   };
 
+  const handleGoHome = () => {
+    // Update the data to ensure counts are current
+    const updatedData = getVideoData();
+    setVideoData(updatedData);
+    
+    // Reset the UI state
+    setSelectedTask(null);
+    setError(null);
+    
+    toast({
+      title: "Home",
+      description: `Data updated: ${updatedData.artistCount} artists and ${updatedData.videoCount} videos`,
+    });
+  };
+
   const renderTaskComponent = () => {
     switch (selectedTask) {
       case 'search':
@@ -217,7 +233,17 @@ const Index = () => {
           <div className="max-w-2xl mx-auto space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Search for an Artist</h2>
-              <Button variant="ghost" onClick={() => setSelectedTask(null)}>Cancel</Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={handleGoHome} 
+                  className="flex items-center gap-1"
+                >
+                  <Home className="h-4 w-4" />
+                  Home
+                </Button>
+                <Button variant="ghost" onClick={() => setSelectedTask(null)}>Cancel</Button>
+              </div>
             </div>
             
             <form onSubmit={handleSearch} className="flex gap-2">
@@ -248,11 +274,29 @@ const Index = () => {
           </div>
         );
       case 'playlist':
-        return <PlaylistExtractor onExtract={handleExtractArtists} onCancel={() => setSelectedTask(null)} />;
+        return (
+          <PlaylistExtractor 
+            onExtract={handleExtractArtists} 
+            onCancel={() => setSelectedTask(null)}
+            onGoHome={handleGoHome} 
+          />
+        );
       case 'json':
-        return <JsonImporter onImport={handleImportComplete} onCancel={() => setSelectedTask(null)} />;
+        return (
+          <JsonImporter 
+            onImport={handleImportComplete} 
+            onCancel={() => setSelectedTask(null)}
+            onGoHome={handleGoHome} 
+          />
+        );
       case 'txt':
-        return <TextFileUploader onUpload={handleExtractArtists} onCancel={() => setSelectedTask(null)} />;
+        return (
+          <TextFileUploader 
+            onUpload={handleExtractArtists} 
+            onCancel={() => setSelectedTask(null)}
+            onGoHome={handleGoHome} 
+          />
+        );
       default:
         return null;
     }
@@ -273,7 +317,11 @@ const Index = () => {
         
         {/* Task selector or currently selected task */}
         {selectedTask === null ? (
-          <TaskSelector videoData={videoData} onTaskSelect={setSelectedTask} />
+          <TaskSelector 
+            videoData={videoData} 
+            onTaskSelect={setSelectedTask}
+            onGoHome={handleGoHome} 
+          />
         ) : (
           renderTaskComponent()
         )}
@@ -299,7 +347,20 @@ const Index = () => {
         
         {/* Display current results */}
         {!isSearching && currentArtist && (
-          <VideoResults artist={currentArtist} videos={videos} />
+          <div className="space-y-6">
+            <VideoResults artist={currentArtist} videos={videos} />
+            
+            <div className="flex justify-center mt-4">
+              <Button 
+                onClick={handleGoHome} 
+                variant="outline" 
+                className="flex items-center gap-1"
+              >
+                <Home className="h-4 w-4" />
+                Return to Home
+              </Button>
+            </div>
+          </div>
         )}
         
         {/* Download JSON button */}
