@@ -45,7 +45,7 @@ const VideoResults = ({ artist, videos }: VideoResultsProps) => {
       const jsonUrl = generateArtistDataJsonDownload();
       const link = document.createElement('a');
       link.href = jsonUrl;
-      link.download = `ARTIST_DATA.json`;
+      link.download = `${artist.name.replace(/\s+/g, '_')}_ARTIST_DATA.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -55,7 +55,7 @@ const VideoResults = ({ artist, videos }: VideoResultsProps) => {
       
       toast({
         title: "Artist data download started",
-        description: "Your ARTIST_DATA.json file is being downloaded",
+        description: `Your ${artist.name}_ARTIST_DATA.json file is being downloaded`,
       });
     } catch (error) {
       console.error("Download error:", error);
@@ -72,7 +72,7 @@ const VideoResults = ({ artist, videos }: VideoResultsProps) => {
       const jsonUrl = generateVideoDataJsonDownload();
       const link = document.createElement('a');
       link.href = jsonUrl;
-      link.download = `VIDEO_DATA.json`;
+      link.download = `${artist.name.replace(/\s+/g, '_')}_VIDEO_DATA.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -82,7 +82,7 @@ const VideoResults = ({ artist, videos }: VideoResultsProps) => {
       
       toast({
         title: "Video data download started",
-        description: "Your VIDEO_DATA.json file is being downloaded",
+        description: `Your ${artist.name}_VIDEO_DATA.json file is being downloaded`,
       });
     } catch (error) {
       console.error("Download error:", error);

@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { FileJson, Home } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { importFromJson } from "@/services/fileManager";
 
@@ -14,6 +15,7 @@ interface JsonImporterProps {
 
 const JsonImporter = ({ onImport, onCancel, onGoHome }: JsonImporterProps) => {
   const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -45,14 +47,31 @@ const JsonImporter = ({ onImport, onCancel, onGoHome }: JsonImporterProps) => {
     }
 
     setIsImporting(true);
+    setImportProgress(10); // Start progress
     
     try {
+      // Simulate progress for better UX
+      const progressInterval = setInterval(() => {
+        setImportProgress(prev => {
+          const newProgress = prev + Math.random() * 15;
+          return newProgress >= 90 ? 90 : newProgress; // Cap at 90% until complete
+        });
+      }, 300);
+      
       await importFromJson(selectedFile);
+      
+      clearInterval(progressInterval);
+      setImportProgress(100); // Complete
+      
       toast({
         title: "Import successful",
         description: "JSON data has been imported and combined with existing data",
       });
-      onImport();
+      
+      // Small delay to show 100% before completion
+      setTimeout(() => {
+        onImport();
+      }, 500);
     } catch (error) {
       console.error("Import error:", error);
       toast({
@@ -60,6 +79,7 @@ const JsonImporter = ({ onImport, onCancel, onGoHome }: JsonImporterProps) => {
         description: error instanceof Error ? error.message : "Failed to import JSON data",
         variant: "destructive",
       });
+      setImportProgress(0);
     } finally {
       setIsImporting(false);
     }
@@ -117,6 +137,16 @@ const JsonImporter = ({ onImport, onCancel, onGoHome }: JsonImporterProps) => {
           </Button>
         </div>
       </div>
+      
+      {isImporting && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <LoadingSpinner size={16} />
+            <span className="text-sm text-muted-foreground">{Math.round(importProgress)}% complete</span>
+          </div>
+          <Progress value={importProgress} className="w-full" />
+        </div>
+      )}
       
       <div className="flex gap-4">
         <Button

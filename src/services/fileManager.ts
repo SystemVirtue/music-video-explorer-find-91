@@ -13,6 +13,7 @@ export interface VideoDataEntry {
 export interface ArtistDataEntry {
   artistMBID: string;      // MusicBrainz artist ID
   artistADID: string;      // AudioDB artist ID
+  artistName: string;      // Artist name
   artistVideoCount: number; // Count of videos with matching artistADID
   artistThumb: string;     // YouTube video ID of first matching video
 }
@@ -155,9 +156,19 @@ const generateArtistDataFromVideos = (videoData: VideoDataFile): ArtistDataFile 
   
   videoData.videos.forEach(video => {
     if (!artistMap.has(video.artistADID)) {
+      // Try to extract artist name from song title
+      let artistName = "";
+      const titleParts = video.songTitle.split(' - ');
+      if (titleParts.length > 1) {
+        artistName = titleParts[0].trim();
+      } else {
+        artistName = `Artist (ID: ${video.artistADID.substring(0, 8)}...)`;
+      }
+      
       artistMap.set(video.artistADID, {
         artistMBID: video.artistMBID,
         artistADID: video.artistADID,
+        artistName: artistName,
         artistVideoCount: 1,
         artistThumb: video.thumbnailYTID
       });
@@ -205,10 +216,11 @@ export const addSearchResultsToVideoData = (artist: Artist, videos: MusicVideo[]
     // Get all videos for this artist
     const artistVideos = videoData.videos.filter(v => v.artistADID === videos[0].idArtist);
     
-    // Add new artist
+    // Add new artist with name
     artistData.artists.push({
       artistMBID: artist.id,
       artistADID: videos[0].idArtist,
+      artistName: artist.name, // Add the artist name
       artistVideoCount: artistVideos.length,
       artistThumb: artistVideos.length > 0 ? artistVideos[0].thumbnailYTID : ""
     });
@@ -216,10 +228,11 @@ export const addSearchResultsToVideoData = (artist: Artist, videos: MusicVideo[]
     // Update existing artist's video count
     const artistVideos = videoData.videos.filter(v => v.artistADID === videos[0].idArtist);
     artistData.artists[existingArtistIndex].artistVideoCount = artistVideos.length;
+    // Ensure artist name is set
+    if (!artistData.artists[existingArtistIndex].artistName) {
+      artistData.artists[existingArtistIndex].artistName = artist.name;
+    }
   }
-  
-  // Sort artists alphabetically (we need to use a separate function for this)
-  // Since we don't have artist names in the new format, we'll skip this for now
   
   // Save updated data
   saveVideoData(artistData, videoData);
@@ -227,7 +240,7 @@ export const addSearchResultsToVideoData = (artist: Artist, videos: MusicVideo[]
   return { artistData, videoData };
 };
 
-// Import data from uploaded JSON file
+// Update the importFromJson function to properly count and update in-memory JSON
 export const importFromJson = async (file: File): Promise<{ artistData: ArtistDataFile, videoData: VideoDataFile }> => {
   return new Promise<{ artistData: ArtistDataFile, videoData: VideoDataFile }>((resolve, reject) => {
     const reader = new FileReader();
@@ -241,6 +254,7 @@ export const importFromJson = async (file: File): Promise<{ artistData: ArtistDa
         
         const importedData = JSON.parse(event.target.result as string);
         const { artistData, videoData } = getVideoData();
+        let modified = false;
         
         // Check if this is a legacy format or new format
         if (importedData.artists && Array.isArray(importedData.artists) && 
@@ -249,7 +263,12 @@ export const importFromJson = async (file: File): Promise<{ artistData: ArtistDa
           importedData.artists.forEach((importedArtist: ArtistDataEntry) => {
             const existingIndex = artistData.artists.findIndex(a => a.artistADID === importedArtist.artistADID);
             if (existingIndex === -1) {
+              // Add name if it doesn't exist
+              if (!importedArtist.artistName) {
+                importedArtist.artistName = `Artist (ID: ${importedArtist.artistADID.substring(0, 8)}...)`;
+              }
               artistData.artists.push(importedArtist);
+              modified = true;
             }
           });
         } else if (importedData.videos && Array.isArray(importedData.videos) && 
@@ -259,12 +278,34 @@ export const importFromJson = async (file: File): Promise<{ artistData: ArtistDa
             const existingIndex = videoData.videos.findIndex(v => v.songADID === importedVideo.songADID);
             if (existingIndex === -1) {
               videoData.videos.push(importedVideo);
+              modified = true;
             }
           });
+        } else if (importedData.artistData && importedData.videoData) {
+          // This is a combined format
+          if (importedData.artistData.artists && Array.isArray(importedData.artistData.artists)) {
+            importedData.artistData.artists.forEach((importedArtist: ArtistDataEntry) => {
+              const existingIndex = artistData.artists.findIndex(a => a.artistADID === importedArtist.artistADID);
+              if (existingIndex === -1) {
+                // Add name if it doesn't exist
+                if (!importedArtist.artistName) {
+                  importedArtist.artistName = `Artist (ID: ${importedArtist.artistADID.substring(0, 8)}...)`;
+                }
+                artistData.artists.push(importedArtist);
+                modified = true;
+              }
+            });
+          }
           
-          // Regenerate artist data
-          const updatedArtistData = generateArtistDataFromVideos(videoData);
-          Object.assign(artistData, updatedArtistData);
+          if (importedData.videoData.videos && Array.isArray(importedData.videoData.videos)) {
+            importedData.videoData.videos.forEach((importedVideo: VideoDataEntry) => {
+              const existingIndex = videoData.videos.findIndex(v => v.songADID === importedVideo.songADID);
+              if (existingIndex === -1) {
+                videoData.videos.push(importedVideo);
+                modified = true;
+              }
+            });
+          }
         } else if (importedData.artist && importedData.videos) {
           // This is a legacy SearchResults format
           const artist = importedData.artist as Artist;
@@ -287,16 +328,31 @@ export const importFromJson = async (file: File): Promise<{ artistData: ArtistDa
                 videoURL: video.strMusicVid,
                 thumbnailYTID: youtubeId
               });
+              modified = true;
             }
           });
         }
         
-        // Regenerate artist data to ensure consistency
-        const regeneratedArtistData = generateArtistDataFromVideos(videoData);
-        Object.assign(artistData, regeneratedArtistData);
-        
-        // Save updated data
-        saveVideoData(artistData, videoData);
+        // Only regenerate artist data if something was modified
+        if (modified) {
+          // Regenerate artist data to ensure consistency and correct counts
+          const regeneratedArtistData = generateArtistDataFromVideos(videoData);
+          
+          // Preserve artist names from the existing artist data
+          regeneratedArtistData.artists = regeneratedArtistData.artists.map(newArtist => {
+            const existingArtist = artistData.artists.find(a => a.artistADID === newArtist.artistADID);
+            if (existingArtist && existingArtist.artistName) {
+              newArtist.artistName = existingArtist.artistName;
+            }
+            return newArtist;
+          });
+          
+          // Replace artist data with regenerated data
+          artistData.artists = regeneratedArtistData.artists;
+          
+          // Save updated data
+          saveVideoData(artistData, videoData);
+        }
         
         resolve({ artistData, videoData });
       } catch (error) {

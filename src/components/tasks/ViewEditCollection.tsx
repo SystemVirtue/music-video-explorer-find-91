@@ -3,9 +3,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Home, Edit, Trash, Check } from "lucide-react";
+import { Home, Edit, Trash, Check, AlertCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { ArtistDataEntry, VideoDataEntry } from "@/services/fileManager";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface ViewEditCollectionProps {
   artists: ArtistDataEntry[];
@@ -17,58 +19,56 @@ interface ViewEditCollectionProps {
 
 interface ArtistWithSelection extends ArtistDataEntry {
   selected: boolean;
-  name?: string; // Optional name field in case we have it
 }
 
 const ViewEditCollection = ({ artists, videos, onDeleteArtists, onCancel, onGoHome }: ViewEditCollectionProps) => {
   const [artistList, setArtistList] = useState<ArtistWithSelection[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processProgress, setProcessProgress] = useState(0);
   const { toast } = useToast();
   
   // Initialize artist list with video counts
   useEffect(() => {
-    // Group videos by artistADID to get artist names
-    const artistNamesMap = new Map<string, string>();
-    videos.forEach(video => {
-      if (!artistNamesMap.has(video.artistADID)) {
-        // Extract artist name from song title or use placeholder
-        const artistName = getArtistNameFromVideo(video);
-        artistNamesMap.set(video.artistADID, artistName);
-      }
-    });
-    
-    const artistsWithSelections = artists.map(artist => {
-      // Count videos for this artist
-      const count = videos.filter(video => video.artistADID === artist.artistADID).length;
+    setIsProcessing(true);
+    const processArtists = async () => {
+      const totalArtists = artists.length;
+      const artistsWithSelections: ArtistWithSelection[] = [];
       
-      return {
-        ...artist,
-        videoCount: count,
-        selected: false,
-        name: artistNamesMap.get(artist.artistADID) || `Artist (ID: ${artist.artistADID.substring(0, 8)}...)`
-      };
-    });
+      for (let i = 0; i < artists.length; i++) {
+        const artist = artists[i];
+        // Count videos for this artist
+        const count = videos.filter(video => video.artistADID === artist.artistADID).length;
+        
+        artistsWithSelections.push({
+          ...artist,
+          artistVideoCount: count, // Update count based on actual videos
+          selected: false
+        });
+        
+        // Update progress
+        const progress = Math.round(((i + 1) / totalArtists) * 100);
+        setProcessProgress(progress);
+        
+        // Add a small delay to avoid UI freezing for large collections
+        if (i % 20 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 0));
+        }
+      }
+      
+      setArtistList(artistsWithSelections);
+      setIsProcessing(false);
+    };
     
-    setArtistList(artistsWithSelections);
+    processArtists();
   }, [artists, videos]);
-  
-  // Helper function to attempt to extract artist name from video data
-  const getArtistNameFromVideo = (video: VideoDataEntry): string => {
-    // Try to extract from song title if it follows "Artist - Song Title" format
-    const titleParts = video.songTitle.split(' - ');
-    if (titleParts.length > 1) {
-      return titleParts[0].trim();
-    }
-    
-    // Use part of the artistADID as fallback
-    return `Artist (ID: ${video.artistADID.substring(0, 8)}...)`;
-  };
   
   // Filter artists based on search term
   const filteredArtists = artistList.filter(artist => 
-    (artist.name && artist.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    artist.artistADID.toLowerCase().includes(searchTerm.toLowerCase())
+    (artist.artistName && artist.artistName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    artist.artistADID.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    artist.artistMBID.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
   const selectedCount = artistList.filter(artist => artist.selected).length;
@@ -95,6 +95,26 @@ const ViewEditCollection = ({ artists, videos, onDeleteArtists, onCancel, onGoHo
     );
   };
   
+  // Select all artists with no videos
+  const selectArtistsWithNoVideos = () => {
+    setArtistList(prev => 
+      prev.map(artist => {
+        if (artist.artistVideoCount === 0) {
+          return { ...artist, selected: true };
+        }
+        return artist;
+      })
+    );
+    
+    // Count how many artists have no videos
+    const noVideoCount = artistList.filter(artist => artist.artistVideoCount === 0).length;
+    
+    toast({
+      title: `Selected ${noVideoCount} artists without videos`,
+      description: "You can now delete these artists from your collection."
+    });
+  };
+  
   // Handle deletion of selected artists
   const handleDelete = () => {
     const selectedADIDs = artistList
@@ -109,6 +129,22 @@ const ViewEditCollection = ({ artists, videos, onDeleteArtists, onCancel, onGoHo
       description: `${selectedADIDs.length} artists have been removed from the collection.`
     });
   };
+
+  if (isProcessing) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Processing Collection Data</h2>
+        </div>
+        
+        <div className="space-y-4 text-center py-12">
+          <LoadingSpinner size={48} className="mx-auto" />
+          <Progress value={processProgress} className="w-full max-w-md mx-auto" />
+          <p className="text-muted-foreground">{processProgress}% complete</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -131,7 +167,7 @@ const ViewEditCollection = ({ artists, videos, onDeleteArtists, onCancel, onGoHo
       
       <div className="border rounded-lg">
         {/* Header - Fixed position */}
-        <div className="sticky top-0 bg-background p-4 border-b flex items-center gap-4">
+        <div className="sticky top-0 bg-background p-4 border-b flex flex-wrap items-center gap-4">
           <Button 
             variant="outline" 
             size="sm" 
@@ -140,6 +176,16 @@ const ViewEditCollection = ({ artists, videos, onDeleteArtists, onCancel, onGoHo
           >
             <Check className="h-4 w-4" />
             {filteredArtists.every(artist => artist.selected) ? "Deselect All" : "Select All"}
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-1"
+            onClick={selectArtistsWithNoVideos}
+          >
+            <AlertCircle className="h-4 w-4" />
+            Select Artists Without Videos
           </Button>
           
           <div className="text-sm text-muted-foreground">
@@ -173,7 +219,7 @@ const ViewEditCollection = ({ artists, videos, onDeleteArtists, onCancel, onGoHo
                     onChange={() => toggleSelect(artist.artistADID)}
                     className="mr-3 h-4 w-4"
                   />
-                  <span className="flex-grow">{artist.name}</span>
+                  <span className="flex-grow">{artist.artistName || `Artist (ID: ${artist.artistADID.substring(0, 8)}...)`}</span>
                   <span className="text-muted-foreground">({artist.artistVideoCount})</span>
                 </div>
               ))}
