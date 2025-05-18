@@ -2,6 +2,7 @@
 import { ArtistDataFile, VideoDataFile, ArtistDataEntry, VideoDataEntry } from './types';
 import { getVideoData, saveVideoData } from './storage';
 import { generateArtistDataFromVideos } from './dataGenerators';
+import { extractYouTubeVideoId } from './utils';
 import { Artist, MusicVideo, getYouTubePlaylistItems, extractArtistsFromTitles } from "@/services/musicApi";
 
 /**
