@@ -15,6 +15,7 @@ export const convertLegacyDataToNewFormat = (legacyData: LegacyVideoDataFile): {
     
     if (youtubeId) {
       videoData.videos.push({
+        strArtist: video.strArtist || "", // Add the strArtist field
         artistADID: video.idArtist,
         artistMBID: "", // Legacy data might not have this, will be updated later
         songADID: video.idTrack,

@@ -23,6 +23,7 @@ export const addSearchResultsToVideoData = (artist: Artist, videos: MusicVideo[]
     if (existingVideoIndex === -1) {
       // Add new video
       videoData.videos.push({
+        strArtist: video.strArtist || artist.name || "", // Add the strArtist field
         artistADID: video.idArtist,
         artistMBID: artist.id, // Use the artist's MusicBrainz ID
         songADID: video.idTrack,
@@ -45,8 +46,15 @@ export const addSearchResultsToVideoData = (artist: Artist, videos: MusicVideo[]
       artistMBID: artist.id,
       artistADID: videos[0].idArtist,
       artistName: artist.name, // Add the artist name
+      strArtist: artist.name || videos[0].strArtist || "", // Add the strArtist field
       artistVideoCount: artistVideos.length,
-      artistThumb: artistVideos.length > 0 ? artistVideos[0].thumbnailYTID : ""
+      artistThumb: artistVideos.length > 0 ? artistVideos[0].thumbnailYTID : "",
+      banner: "", // Add default value for banner
+      logo: "", // Add default value for logo
+      thumbnail: "", // Add default value for thumbnail
+      genre: "", // Add default value for genre
+      mood: "", // Add default value for mood
+      style: "" // Add default value for style
     });
   } else if (videos.length > 0) {
     // Update existing artist's video count
@@ -55,6 +63,10 @@ export const addSearchResultsToVideoData = (artist: Artist, videos: MusicVideo[]
     // Ensure artist name is set
     if (!artistData.artists[existingArtistIndex].artistName) {
       artistData.artists[existingArtistIndex].artistName = artist.name;
+    }
+    // Ensure strArtist is set
+    if (!artistData.artists[existingArtistIndex].strArtist) {
+      artistData.artists[existingArtistIndex].strArtist = artist.name || videos[0].strArtist || "";
     }
   }
   
