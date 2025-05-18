@@ -115,7 +115,14 @@ export const getMusicVideos = async (mbid: string): Promise<MusicVideo[]> => {
       
       if (Array.isArray(data.mvids)) {
         console.log(`Found ${data.mvids.length} raw video entries from AudioDB`);
-        return data.mvids;
+        // Make sure each video has at least an empty strArtist field if it's missing
+        const processedVideos = data.mvids.map((video: MusicVideo) => {
+          return {
+            ...video,
+            strArtist: video.strArtist || ""
+          };
+        });
+        return processedVideos;
       } else {
         console.log("'mvids' property is not an array");
         return [];
@@ -141,7 +148,17 @@ export const getMusicVideos = async (mbid: string): Promise<MusicVideo[]> => {
           return [];
         }
         
-        return Array.isArray(altData.mvids) ? altData.mvids : [];
+        // Make sure each video has at least an empty strArtist field if it's missing
+        const processedVideos = Array.isArray(altData.mvids) 
+          ? altData.mvids.map((video: MusicVideo) => {
+              return {
+                ...video,
+                strArtist: video.strArtist || ""
+              };
+            })
+          : [];
+        
+        return processedVideos;
       } catch (secondaryError) {
         console.error("Both API endpoints failed:", secondaryError);
         throw new Error("Failed to fetch music videos from AudioDB. The service may be down or experiencing issues.");

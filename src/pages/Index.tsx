@@ -97,9 +97,21 @@ const Index = () => {
         return;
       }
       
+      console.log("Found artist:", artist);
+      
       // Step 2: Get music videos from AudioDB
       try {
         const fetchedVideos = await getMusicVideos(artist.id);
+        
+        console.log("Fetched videos:", fetchedVideos);
+        
+        if (fetchedVideos.length === 0) {
+          console.log("No videos found for this artist");
+          toast({
+            title: "No videos found",
+            description: `No music videos found for ${artist.name}`,
+          });
+        }
         
         // Step 3: Add to video data file
         const updatedData = addSearchResultsToVideoData(artist, fetchedVideos);
