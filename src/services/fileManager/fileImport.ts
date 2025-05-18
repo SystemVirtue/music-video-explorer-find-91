@@ -1,4 +1,3 @@
-
 import { ArtistDataFile, VideoDataFile, ArtistDataEntry, VideoDataEntry } from './types';
 import { getVideoData, saveVideoData } from './storage';
 import { generateArtistDataFromVideos } from './dataGenerators';
@@ -34,6 +33,16 @@ export const importFromJson = async (file: File): Promise<{ artistData: ArtistDa
               if (!importedArtist.artistName) {
                 importedArtist.artistName = `Artist (ID: ${importedArtist.artistADID.substring(0, 8)}...)`;
               }
+              
+              // Set default values for new fields if they don't exist
+              if (!importedArtist.strArtist) importedArtist.strArtist = importedArtist.artistName;
+              if (!importedArtist.banner) importedArtist.banner = '';
+              if (!importedArtist.logo) importedArtist.logo = '';
+              if (!importedArtist.thumbnail) importedArtist.thumbnail = '';
+              if (!importedArtist.genre) importedArtist.genre = '';
+              if (!importedArtist.mood) importedArtist.mood = '';
+              if (!importedArtist.style) importedArtist.style = '';
+              
               artistData.artists.push(importedArtist);
               modified = true;
             }
@@ -44,6 +53,13 @@ export const importFromJson = async (file: File): Promise<{ artistData: ArtistDa
           importedData.videos.forEach((importedVideo: VideoDataEntry) => {
             const existingIndex = videoData.videos.findIndex(v => v.songADID === importedVideo.songADID);
             if (existingIndex === -1) {
+              // Set default value for new field if it doesn't exist
+              if (!importedVideo.strArtist) {
+                // Try to find artist name from existing data
+                const artist = artistData.artists.find(a => a.artistADID === importedVideo.artistADID);
+                importedVideo.strArtist = artist?.strArtist || artist?.artistName || '';
+              }
+              
               videoData.videos.push(importedVideo);
               modified = true;
             }
@@ -58,6 +74,16 @@ export const importFromJson = async (file: File): Promise<{ artistData: ArtistDa
                 if (!importedArtist.artistName) {
                   importedArtist.artistName = `Artist (ID: ${importedArtist.artistADID.substring(0, 8)}...)`;
                 }
+                
+                // Set default values for new fields if they don't exist
+                if (!importedArtist.strArtist) importedArtist.strArtist = importedArtist.artistName;
+                if (!importedArtist.banner) importedArtist.banner = '';
+                if (!importedArtist.logo) importedArtist.logo = '';
+                if (!importedArtist.thumbnail) importedArtist.thumbnail = '';
+                if (!importedArtist.genre) importedArtist.genre = '';
+                if (!importedArtist.mood) importedArtist.mood = '';
+                if (!importedArtist.style) importedArtist.style = '';
+                
                 artistData.artists.push(importedArtist);
                 modified = true;
               }
@@ -68,6 +94,13 @@ export const importFromJson = async (file: File): Promise<{ artistData: ArtistDa
             importedData.videoData.videos.forEach((importedVideo: VideoDataEntry) => {
               const existingIndex = videoData.videos.findIndex(v => v.songADID === importedVideo.songADID);
               if (existingIndex === -1) {
+                // Set default value for new field if it doesn't exist
+                if (!importedVideo.strArtist) {
+                  // Try to find artist name from existing data
+                  const artist = artistData.artists.find(a => a.artistADID === importedVideo.artistADID);
+                  importedVideo.strArtist = artist?.strArtist || artist?.artistName || '';
+                }
+                
                 videoData.videos.push(importedVideo);
                 modified = true;
               }
@@ -88,6 +121,7 @@ export const importFromJson = async (file: File): Promise<{ artistData: ArtistDa
             
             if (existingVideoIndex === -1) {
               videoData.videos.push({
+                strArtist: artist.name || video.strArtist || '',
                 artistADID: video.idArtist,
                 artistMBID: artist.id,
                 songADID: video.idTrack,
@@ -108,9 +142,30 @@ export const importFromJson = async (file: File): Promise<{ artistData: ArtistDa
           // Preserve artist names from the existing artist data
           regeneratedArtistData.artists = regeneratedArtistData.artists.map(newArtist => {
             const existingArtist = artistData.artists.find(a => a.artistADID === newArtist.artistADID);
-            if (existingArtist && existingArtist.artistName) {
-              newArtist.artistName = existingArtist.artistName;
+            if (existingArtist) {
+              // Preserve existing fields
+              if (existingArtist.artistName) {
+                newArtist.artistName = existingArtist.artistName;
+              }
+              // Transfer new fields if they exist
+              if (existingArtist.strArtist) newArtist.strArtist = existingArtist.strArtist;
+              if (existingArtist.banner) newArtist.banner = existingArtist.banner;
+              if (existingArtist.logo) newArtist.logo = existingArtist.logo;
+              if (existingArtist.thumbnail) newArtist.thumbnail = existingArtist.thumbnail;
+              if (existingArtist.genre) newArtist.genre = existingArtist.genre;
+              if (existingArtist.mood) newArtist.mood = existingArtist.mood;
+              if (existingArtist.style) newArtist.style = existingArtist.style;
             }
+            
+            // Set default values for new fields if they don't exist
+            if (!newArtist.strArtist) newArtist.strArtist = newArtist.artistName;
+            if (!newArtist.banner) newArtist.banner = '';
+            if (!newArtist.logo) newArtist.logo = '';
+            if (!newArtist.thumbnail) newArtist.thumbnail = '';
+            if (!newArtist.genre) newArtist.genre = '';
+            if (!newArtist.mood) newArtist.mood = '';
+            if (!newArtist.style) newArtist.style = '';
+            
             return newArtist;
           });
           

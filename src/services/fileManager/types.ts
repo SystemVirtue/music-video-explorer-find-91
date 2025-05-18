@@ -1,6 +1,7 @@
 
 // Define interfaces for the normalized JSON structures
 export interface VideoDataEntry {
+  strArtist: string;      // TheAudioDB Artist_Name
   artistADID: string;      // AudioDB artist ID
   artistMBID: string;      // MusicBrainz artist ID
   songADID: string;        // AudioDB track ID
@@ -15,6 +16,13 @@ export interface ArtistDataEntry {
   artistName: string;      // Artist name
   artistVideoCount: number; // Count of videos with matching artistADID
   artistThumb: string;     // YouTube video ID of first matching video
+  strArtist: string;       // TheAudioDB Artist_Name
+  banner: string;          // A 1000x185 JPG banner image containing the artist logo and/or name
+  logo: string;            // A 400x155 PNG image of artist's logo or name, on a transparent background
+  thumbnail: string;       // A 1000x1000 JPG thumbnail image picturing the artist
+  genre: string;           // The primary musical genre of the artist
+  mood: string;            // The primary musical mood of the artist
+  style: string;           // The primary musical style of the artist
 }
 
 export interface VideoDataFile {

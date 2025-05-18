@@ -24,12 +24,23 @@ export const generateArtistDataFromVideos = (videoData: VideoDataFile): ArtistDa
         artistMBID: video.artistMBID,
         artistADID: video.artistADID,
         artistName: artistName,
+        strArtist: video.strArtist || artistName,
         artistVideoCount: 1,
-        artistThumb: video.thumbnailYTID
+        artistThumb: video.thumbnailYTID,
+        banner: '',
+        logo: '',
+        thumbnail: '',
+        genre: '',
+        mood: '',
+        style: ''
       });
     } else {
       const artist = artistMap.get(video.artistADID)!;
       artist.artistVideoCount += 1;
+      // Update strArtist if it's not set yet but exists in the video
+      if (!artist.strArtist && video.strArtist) {
+        artist.strArtist = video.strArtist;
+      }
     }
   });
   
