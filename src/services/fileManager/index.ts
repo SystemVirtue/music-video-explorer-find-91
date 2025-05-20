@@ -25,7 +25,8 @@ export {
 export {
   generateArtistDataJsonDownload,
   generateVideoDataJsonDownload,
-  generateCombinedDataJsonDownload
+  generateCombinedDataJsonDownload,
+  generateLegacyV2JsonDownload
 } from './downloadGenerators';
 
 // Re-export data operations

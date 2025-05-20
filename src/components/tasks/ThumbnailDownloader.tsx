@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -22,16 +23,19 @@ const ThumbnailDownloader = ({ videos, onCancel, onGoHome }: ThumbnailDownloader
   const [isComplete, setIsComplete] = useState(false);
   const { toast } = useToast();
 
-  // This is a mock location selection for web browser
-  // In a real desktop app, this would use a native file picker
+  // This function now immediately starts the download process
+  // without requiring any additional user interaction
   const handleLocationSelect = () => {
-    // In a browser environment, we can't actually choose a folder location
-    // This is just a mock UI flow for the demo
     setIsSelectingLocation(false);
     setIsDownloading(true);
     
-    // Start the mock download process
+    // Start the download process
     downloadThumbnails();
+    
+    toast({
+      title: "Download Started",
+      description: "Processing thumbnails, please wait..."
+    });
   };
 
   const downloadThumbnails = async () => {
@@ -108,15 +112,15 @@ const ThumbnailDownloader = ({ videos, onCancel, onGoHome }: ThumbnailDownloader
 
       {isSelectingLocation && (
         <div className="p-6 border rounded-lg space-y-4">
-          <p>Choose a location to save thumbnail images (existing thumbnails will be ignored)</p>
+          <p className="font-medium">Press "Start Download" to begin downloading {videos.length} thumbnails</p>
           
           <div className="flex justify-center">
             <Button 
               onClick={handleLocationSelect} 
               className="flex items-center gap-2 bg-music hover:bg-music-hover"
             >
-              <FolderOpen className="h-4 w-4" />
-              Select Folder
+              <Download className="h-4 w-4" />
+              Start Download
             </Button>
           </div>
           

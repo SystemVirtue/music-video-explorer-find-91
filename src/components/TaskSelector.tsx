@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Search, List, FileJson, Upload, Home, Download, RefreshCcw, Edit, File } from "lucide-react";
+import { Search, List, FileJson, Upload, Home, Download, RefreshCcw, Edit, File, FileExport } from "lucide-react";
 import { ArtistDataFile, VideoDataFile, getCollectionStats } from "@/services/fileManager";
 
 export type Task = 'search' | 'playlist' | 'json' | 'txt' | 'thumbnails' | 'reset' | 'view-edit' | 'ai-generate' | null;
@@ -12,9 +12,10 @@ interface TaskSelectorProps {
   onTaskSelect: (task: Task) => void;
   onGoHome?: () => void;
   onExportCollection: () => void;
+  onExportLegacyV2?: () => void;
 }
 
-const TaskSelector = ({ artistData, videoData, onTaskSelect, onGoHome, onExportCollection }: TaskSelectorProps) => {
+const TaskSelector = ({ artistData, videoData, onTaskSelect, onGoHome, onExportCollection, onExportLegacyV2 }: TaskSelectorProps) => {
   const { artistCount, videoCount } = getCollectionStats();
   
   const hasData = artistCount > 0 || videoCount > 0;
@@ -32,13 +33,26 @@ const TaskSelector = ({ artistData, videoData, onTaskSelect, onGoHome, onExportC
         </div>
         
         {hasData && (
-          <Button 
-            onClick={onExportCollection}
-            className="bg-music hover:bg-music-hover"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Export Current Collection as JSON
-          </Button>
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Button 
+              onClick={onExportCollection}
+              className="bg-music hover:bg-music-hover"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Export Current Collection as JSON
+            </Button>
+            
+            {onExportLegacyV2 && (
+              <Button 
+                onClick={onExportLegacyV2}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <FileExport className="h-4 w-4" />
+                LEGACY (V2) EXPORT - compatible
+              </Button>
+            )}
+          </div>
         )}
       </div>
       

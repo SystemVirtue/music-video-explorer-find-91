@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Artist, MusicVideo, searchArtist, getMusicVideos } from "@/services/musicApi";
 import { Button } from "@/components/ui/button";
@@ -20,6 +19,7 @@ import {
   initializeVideoData, 
   addSearchResultsToVideoData, 
   generateCombinedDataJsonDownload,
+  generateLegacyV2JsonDownload,
   getCollectionStats,
   ArtistDataFile,
   VideoDataFile,
@@ -207,6 +207,7 @@ const Index = () => {
     });
   };
   
+  // Handle exporting collection
   const handleExportCollection = () => {
     try {
       const jsonUrl = generateCombinedDataJsonDownload();
@@ -231,6 +232,36 @@ const Index = () => {
       toast({
         title: "Export failed",
         description: "There was an error generating your export file",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle exporting collection in legacy V2 format
+  const handleExportLegacyV2 = () => {
+    try {
+      const jsonUrl = generateLegacyV2JsonDownload();
+      const { artistCount, videoCount } = getCollectionStats();
+      const fileName = `Legacy_V2_Export_${artistCount}_Artists_${videoCount}_Videos.json`;
+      const link = document.createElement('a');
+      link.href = jsonUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the object URL
+      setTimeout(() => URL.revokeObjectURL(jsonUrl), 100);
+      
+      toast({
+        title: "Legacy Export Complete",
+        description: `Your file "${fileName}" has been exported in V2 format`,
+      });
+    } catch (error) {
+      console.error("Legacy export error:", error);
+      toast({
+        title: "Legacy export failed",
+        description: "There was an error generating your legacy export file",
         variant: "destructive",
       });
     }
@@ -417,6 +448,7 @@ const Index = () => {
             onTaskSelect={setSelectedTask}
             onGoHome={handleGoHome}
             onExportCollection={handleExportCollection}
+            onExportLegacyV2={handleExportLegacyV2}
           />
         ) : (
           renderTaskComponent()
