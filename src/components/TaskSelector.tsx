@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Search, List, FileJson, Upload, Home, Download, RefreshCcw, Edit, File, FileExport } from "lucide-react";
+import { Search, List, FileJson, Upload, Home, Download, RefreshCcw, Edit, File, FileText } from "lucide-react";
 import { ArtistDataFile, VideoDataFile, getCollectionStats } from "@/services/fileManager";
 
 export type Task = 'search' | 'playlist' | 'json' | 'txt' | 'thumbnails' | 'reset' | 'view-edit' | 'ai-generate' | null;
@@ -48,7 +47,7 @@ const TaskSelector = ({ artistData, videoData, onTaskSelect, onGoHome, onExportC
                 variant="outline"
                 className="flex items-center gap-2"
               >
-                <FileExport className="h-4 w-4" />
+                <FileText className="h-4 w-4" />
                 LEGACY (V2) EXPORT - compatible
               </Button>
             )}
