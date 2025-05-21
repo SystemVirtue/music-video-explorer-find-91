@@ -1,4 +1,5 @@
-import { Artist, MusicVideo, getArtistDetails } from "@/services/musicApi";
+
+import { Artist, MusicVideo, getArtistDetails } from "@/services/music";
 import { ArtistDataFile, VideoDataFile, ArtistDataEntry } from './types';
 import { extractYouTubeVideoId } from './utils';
 import { getVideoData, saveVideoData } from './storage';
