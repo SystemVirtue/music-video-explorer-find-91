@@ -1,6 +1,5 @@
-
-import { Artist, MusicVideo } from "@/services/musicApi";
-import { ArtistDataFile, VideoDataFile } from './types';
+import { Artist, MusicVideo, getArtistDetails } from "@/services/musicApi";
+import { ArtistDataFile, VideoDataFile, ArtistDataEntry } from './types';
 import { extractYouTubeVideoId } from './utils';
 import { getVideoData, saveVideoData } from './storage';
 import { generateArtistDataFromVideos } from './dataGenerators';
@@ -48,13 +47,13 @@ export const addSearchResultsToVideoData = (artist: Artist, videos: MusicVideo[]
       artistName: artist.name, // Add the artist name
       strArtist: artist.name || videos[0].strArtist || "", // Add the strArtist field
       artistVideoCount: artistVideos.length,
-      artistThumb: artistVideos.length > 0 ? artistVideos[0].thumbnailYTID : "",
-      banner: "", // Add default value for banner
-      logo: "", // Add default value for logo
-      thumbnail: "", // Add default value for thumbnail
-      genre: "", // Add default value for genre
-      mood: "", // Add default value for mood
-      style: "" // Add default value for style
+      strArtistThumb: "", // Update from artistThumb
+      strArtistBanner: "", // Update from banner
+      strArtistLogo: "", // Update from logo
+      strArtistWideThumb: "", // Update from thumbnail
+      strGenre: "", // Update from genre
+      strMood: "", // Update from mood
+      strStyle: "" // Update from style
     });
   } else if (videos.length > 0) {
     // Update existing artist's video count
@@ -96,4 +95,85 @@ export const deleteArtists = (artistADIDs: string[]): { artistData: ArtistDataFi
   saveVideoData(artistData, videoData);
   
   return { artistData, videoData };
+};
+
+/**
+ * Enrich a single artist's data with details from AudioDB
+ */
+export const enrichArtistData = async (artistADID: string): Promise<ArtistDataEntry | null> => {
+  const { artistData, videoData } = getVideoData();
+  const artistIndex = artistData.artists.findIndex(a => a.artistADID === artistADID);
+  
+  if (artistIndex === -1) return null;
+  
+  try {
+    const artistDetails = await getArtistDetails(artistADID);
+    if (!artistDetails) return null;
+    
+    // Update artist data with new fields
+    const updatedArtist = {
+      ...artistData.artists[artistIndex],
+      strArtistThumb: artistDetails.strArtistThumb || artistData.artists[artistIndex].strArtistThumb || '',
+      strArtistBanner: artistDetails.strArtistBanner || artistData.artists[artistIndex].strArtistBanner || '',
+      strArtistLogo: artistDetails.strArtistLogo || artistData.artists[artistIndex].strArtistLogo || '',
+      strArtistWideThumb: artistDetails.strArtistWideThumb || artistData.artists[artistIndex].strArtistWideThumb || '',
+      strGenre: artistDetails.strGenre || artistData.artists[artistIndex].strGenre || '',
+      strMood: artistDetails.strMood || artistData.artists[artistIndex].strMood || '',
+      strStyle: artistDetails.strStyle || artistData.artists[artistIndex].strStyle || ''
+    };
+    
+    // Update in the array
+    artistData.artists[artistIndex] = updatedArtist;
+    
+    // Save updated data
+    saveVideoData(artistData, videoData);
+    
+    return updatedArtist;
+  } catch (error) {
+    console.error(`Error enriching artist data for ${artistADID}:`, error);
+    return null;
+  }
+};
+
+/**
+ * Enrich all artists' data in batches (respecting rate limits)
+ */
+export const enrichAllArtistData = async (
+  onProgress?: (current: number, total: number, success: number, failed: number) => void
+): Promise<{ success: number; failed: number }> => {
+  const { artistData } = getVideoData();
+  let success = 0;
+  let failed = 0;
+  
+  for (let i = 0; i < artistData.artists.length; i++) {
+    const artist = artistData.artists[i];
+    
+    // Update progress callback
+    if (onProgress) {
+      onProgress(i + 1, artistData.artists.length, success, failed);
+    }
+    
+    try {
+      // Add rate limiting - wait 500ms between calls to respect 2 calls/second limit
+      if (i > 0) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
+      const result = await enrichArtistData(artist.artistADID);
+      if (result) {
+        success++;
+      } else {
+        failed++;
+      }
+    } catch (error) {
+      failed++;
+    }
+    
+    // Update progress callback again after attempt
+    if (onProgress) {
+      onProgress(i + 1, artistData.artists.length, success, failed);
+    }
+  }
+  
+  return { success, failed };
 };

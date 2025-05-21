@@ -32,7 +32,9 @@ export {
 // Re-export data operations
 export {
   addSearchResultsToVideoData,
-  deleteArtists
+  deleteArtists,
+  enrichArtistData,
+  enrichAllArtistData
 } from './dataOperations';
 
 // Re-export file import/export functions

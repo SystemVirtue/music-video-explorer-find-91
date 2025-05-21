@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Search, List, FileJson, Upload, Home, Download, RefreshCcw, Edit, File, FileText } from "lucide-react";
+import { Search, List, FileJson, Upload, Home, Download, RefreshCcw, Edit, File, FileText, Image } from "lucide-react";
 import { ArtistDataFile, VideoDataFile, getCollectionStats } from "@/services/fileManager";
 
 export type Task = 'search' | 'playlist' | 'json' | 'txt' | 'thumbnails' | 'reset' | 'view-edit' | 'ai-generate' | null;
@@ -113,9 +114,9 @@ const TaskSelector = ({ artistData, videoData, onTaskSelect, onGoHome, onExportC
           onClick={() => onTaskSelect('thumbnails')}
           className="h-auto py-6 flex flex-col items-center"
         >
-          <Download className="h-8 w-8 mb-2" />
-          <span className="text-lg font-medium">Download Video Thumbnails</span>
-          <span className="text-xs mt-1 text-muted">Save thumbnail images to disk</span>
+          <Image className="h-8 w-8 mb-2" />
+          <span className="text-lg font-medium">Download Visual Assets</span>
+          <span className="text-xs mt-1 text-muted">Save thumbnails and artist images</span>
         </Button>
         
         <Button 

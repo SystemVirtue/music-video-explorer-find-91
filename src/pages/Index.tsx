@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Artist, MusicVideo, searchArtist, getMusicVideos } from "@/services/musicApi";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import TaskSelector, { Task } from "@/components/TaskSelector";
 import PlaylistExtractor from "@/components/tasks/PlaylistExtractor";
 import JsonImporter from "@/components/tasks/JsonImporter";
 import TextFileUploader from "@/components/tasks/TextFileUploader";
-import ThumbnailDownloader from "@/components/tasks/ThumbnailDownloader";
+import VisualAssetsDownloader from "@/components/tasks/VisualAssetsDownloader";
 import ResetCollection from "@/components/tasks/ResetCollection";
 import ViewEditCollection from "@/components/tasks/ViewEditCollection";
 import AiArtistGenerator from "@/components/tasks/AiArtistGenerator";
@@ -389,8 +390,9 @@ const Index = () => {
         );
       case 'thumbnails':
         return (
-          <ThumbnailDownloader
+          <VisualAssetsDownloader
             videos={videoData.videos}
+            artists={artistData.artists}
             onCancel={() => setSelectedTask(null)}
             onGoHome={handleGoHome}
           />
