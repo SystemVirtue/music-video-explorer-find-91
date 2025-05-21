@@ -1,3 +1,4 @@
+
 import { ArtistDataFile, VideoDataFile, ArtistDataEntry, VideoDataEntry } from './types';
 import { getVideoData, saveVideoData } from './storage';
 import { generateArtistDataFromVideos } from './dataGenerators';
@@ -36,12 +37,12 @@ export const importFromJson = async (file: File): Promise<{ artistData: ArtistDa
               
               // Set default values for new fields if they don't exist
               if (!importedArtist.strArtist) importedArtist.strArtist = importedArtist.artistName;
-              if (!importedArtist.banner) importedArtist.banner = '';
-              if (!importedArtist.logo) importedArtist.logo = '';
-              if (!importedArtist.thumbnail) importedArtist.thumbnail = '';
-              if (!importedArtist.genre) importedArtist.genre = '';
-              if (!importedArtist.mood) importedArtist.mood = '';
-              if (!importedArtist.style) importedArtist.style = '';
+              if (!importedArtist.strArtistBanner) importedArtist.strArtistBanner = '';
+              if (!importedArtist.strArtistLogo) importedArtist.strArtistLogo = '';
+              if (!importedArtist.strArtistWideThumb) importedArtist.strArtistWideThumb = '';
+              if (!importedArtist.strGenre) importedArtist.strGenre = '';
+              if (!importedArtist.strMood) importedArtist.strMood = '';
+              if (!importedArtist.strStyle) importedArtist.strStyle = '';
               
               artistData.artists.push(importedArtist);
               modified = true;
@@ -77,12 +78,12 @@ export const importFromJson = async (file: File): Promise<{ artistData: ArtistDa
                 
                 // Set default values for new fields if they don't exist
                 if (!importedArtist.strArtist) importedArtist.strArtist = importedArtist.artistName;
-                if (!importedArtist.banner) importedArtist.banner = '';
-                if (!importedArtist.logo) importedArtist.logo = '';
-                if (!importedArtist.thumbnail) importedArtist.thumbnail = '';
-                if (!importedArtist.genre) importedArtist.genre = '';
-                if (!importedArtist.mood) importedArtist.mood = '';
-                if (!importedArtist.style) importedArtist.style = '';
+                if (!importedArtist.strArtistBanner) importedArtist.strArtistBanner = '';
+                if (!importedArtist.strArtistLogo) importedArtist.strArtistLogo = '';
+                if (!importedArtist.strArtistWideThumb) importedArtist.strArtistWideThumb = '';
+                if (!importedArtist.strGenre) importedArtist.strGenre = '';
+                if (!importedArtist.strMood) importedArtist.strMood = '';
+                if (!importedArtist.strStyle) importedArtist.strStyle = '';
                 
                 artistData.artists.push(importedArtist);
                 modified = true;
@@ -149,22 +150,23 @@ export const importFromJson = async (file: File): Promise<{ artistData: ArtistDa
               }
               // Transfer new fields if they exist
               if (existingArtist.strArtist) newArtist.strArtist = existingArtist.strArtist;
-              if (existingArtist.banner) newArtist.banner = existingArtist.banner;
-              if (existingArtist.logo) newArtist.logo = existingArtist.logo;
-              if (existingArtist.thumbnail) newArtist.thumbnail = existingArtist.thumbnail;
-              if (existingArtist.genre) newArtist.genre = existingArtist.genre;
-              if (existingArtist.mood) newArtist.mood = existingArtist.mood;
-              if (existingArtist.style) newArtist.style = existingArtist.style;
+              if (existingArtist.strArtistBanner) newArtist.strArtistBanner = existingArtist.strArtistBanner;
+              if (existingArtist.strArtistLogo) newArtist.strArtistLogo = existingArtist.strArtistLogo;
+              if (existingArtist.strArtistThumb) newArtist.strArtistThumb = existingArtist.strArtistThumb;
+              if (existingArtist.strArtistWideThumb) newArtist.strArtistWideThumb = existingArtist.strArtistWideThumb;
+              if (existingArtist.strGenre) newArtist.strGenre = existingArtist.strGenre;
+              if (existingArtist.strMood) newArtist.strMood = existingArtist.strMood;
+              if (existingArtist.strStyle) newArtist.strStyle = existingArtist.strStyle;
             }
             
             // Set default values for new fields if they don't exist
             if (!newArtist.strArtist) newArtist.strArtist = newArtist.artistName;
-            if (!newArtist.banner) newArtist.banner = '';
-            if (!newArtist.logo) newArtist.logo = '';
-            if (!newArtist.thumbnail) newArtist.thumbnail = '';
-            if (!newArtist.genre) newArtist.genre = '';
-            if (!newArtist.mood) newArtist.mood = '';
-            if (!newArtist.style) newArtist.style = '';
+            if (!newArtist.strArtistBanner) newArtist.strArtistBanner = '';
+            if (!newArtist.strArtistLogo) newArtist.strArtistLogo = '';
+            if (!newArtist.strArtistWideThumb) newArtist.strArtistWideThumb = '';
+            if (!newArtist.strGenre) newArtist.strGenre = '';
+            if (!newArtist.strMood) newArtist.strMood = '';
+            if (!newArtist.strStyle) newArtist.strStyle = '';
             
             return newArtist;
           });

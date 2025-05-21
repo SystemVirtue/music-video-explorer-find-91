@@ -1,7 +1,28 @@
 
-// Re-export all APIs from a single entry point
+// Re-export all the types and functions from the individual modules
+
+// Export types
 export * from './types';
-export * from './artistApi';
-export * from './videoApi';
-export * from './youtubeApi';
-export * from './dataUtils';
+
+// Export artist API functions
+export { 
+  searchArtist,
+  getArtistDetails 
+} from './artistApi';
+
+// Export video API functions
+export {
+  getMusicVideos
+} from './videoApi';
+
+// Export YouTube API functions
+export {
+  getYouTubePlaylistItems,
+  extractYoutubeId
+} from './youtubeApi';
+
+// Export data utility functions
+export {
+  extractArtistsFromTitles,
+  processMusicVideos
+} from './dataUtils';

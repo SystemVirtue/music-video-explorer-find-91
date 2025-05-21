@@ -19,6 +19,7 @@ import VisualAssetsDownloader from "@/components/tasks/VisualAssetsDownloader";
 import ResetCollection from "@/components/tasks/ResetCollection";
 import ViewEditCollection from "@/components/tasks/ViewEditCollection";
 import AiArtistGenerator from "@/components/tasks/AiArtistGenerator";
+import { getCollectionStats } from "@/services/fileManager/storage";
 
 const Index = () => {
   const [selectedTask, setSelectedTask] = useState<Task>(null);

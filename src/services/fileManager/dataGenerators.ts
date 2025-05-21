@@ -26,13 +26,13 @@ export const generateArtistDataFromVideos = (videoData: VideoDataFile): ArtistDa
         artistName: artistName,
         strArtist: video.strArtist || artistName,
         artistVideoCount: 1,
-        artistThumb: video.thumbnailYTID,
-        banner: '',
-        logo: '',
-        thumbnail: '',
-        genre: '',
-        mood: '',
-        style: ''
+        strArtistThumb: video.thumbnailYTID,
+        strArtistBanner: '',
+        strArtistLogo: '',
+        strArtistWideThumb: '',
+        strGenre: '',
+        strMood: '',
+        strStyle: ''
       });
     } else {
       const artist = artistMap.get(video.artistADID)!;
