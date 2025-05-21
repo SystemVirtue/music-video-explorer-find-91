@@ -24,3 +24,29 @@ export const generateJsonDownload = (artist: Artist, videos: MusicVideo[]): stri
   const blob = new Blob([jsonString], { type: 'application/json' });
   return URL.createObjectURL(blob);
 };
+
+/**
+ * Get detailed information about an artist from TheAudioDB
+ */
+export const getArtistDetails = async (artistADID: string): Promise<any> => {
+  try {
+    // API allows max 2 calls/second
+    const url = `https://www.theaudiodb.com/api/v1/json/2/artist.php?i=${artistADID}`;
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'MusicVideoFinder/1.0.0'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`TheAudioDB API error: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return data?.artists?.[0] || null;
+  } catch (error) {
+    console.error('Error getting artist details:', error);
+    throw error;
+  }
+};
